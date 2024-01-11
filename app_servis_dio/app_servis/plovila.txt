@@ -1,0 +1,6 @@
+{"naziv":"Bad boat do not buy","opis":"SeaScape 14","kategorija":"Sportska jedrilica","cena":"2500"}
+{"naziv":"LoliVul 7,3","opis":"tip top gumenjak","kategorija":"Rhib-Gumenjak","cena":"25000"}
+{"naziv":"dsadas","opis":"novo","kategorija":"Trimaran","cena":"120000"}
+{"naziv":"sdsadasda","opis":"novo 2","kategorija":"Sportska jedrilica","cena":"8555"}
+{"naziv":"Brzi Gonzales","opis":"brzi meksikanac","kategorija":"Trimaran","cena":"100"}
+{"naziv":"Brzi Gonzales","opis":"brz meksikanac","kategorija":"Katamaran","cena":"100"}

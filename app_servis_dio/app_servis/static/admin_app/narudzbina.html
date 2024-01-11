@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Narudzbina</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+<main class="container">
+    <div class="row">
+        <nav class="navbar navbar-expand bg-dark navbar-dark">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="logo.png.png" alt="Avatar Logo" style="width:150px;" class="rounded-pill">
+                    </a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="plovila.html">Ponuda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="narudzbine.html">Narudzbine</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <h1>Detalji narudzbine</h1>
+    <form  id="forma">
+        <dl class="row">
+            <dt class="col-sm-3">Zakazano vreme</dt>
+            <dd class="col-sm-9" id="zakazanoVreme"></dd>
+            <dt class="col-sm-3">Sadržaj narudžbine</dt>
+            <dd class="col-sm-9" id="sadrzajNarudzbine"></dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">
+                <select class="form-select" name="kategorija" id="kategorija">
+                    <option value="Novo">Novo</option>
+                    <option value="Prihvaceno">Prihvaceno</option>
+                    <option value="Odbijeno">Odbijeno</option>
+                    <option value="U pripremi">U pripremi</option>
+                    <option value="U dostavi">U dostavi</option>
+                    <option value="Zavrseno">Zavrseno</option>
+                </select>
+            </dd>
+
+            <dt class="col-sm-3">Cijena</dt>
+            <dd class="col-sm-9" id="cijena"></dd>
+            <dt class="col-sm-3">Adresa</dt>
+            <dd class="col-sm-9" id="adresa"></dd>
+        </dl>
+    </form>
+    <button type="button" class="btn btn-primary" onclick="posaljiPodatke()">Update Values</button>
+    <button type="button" class="btn btn-secondary" onclick="goBack()">Go Back</button>
+</main>
+
+<script>
+    async function goBack() {
+        // Redirect back to the 'narudzbine.html' page
+        window.location.href = 'narudzbine.html';
+    }
+        async function posaljiPodatke() {
+        try {
+        // Get the id from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const narudzbinaId = urlParams.get('id');
+
+        // Get the selected status value from the dropdown
+        const selectedStatus = document.getElementById('kategorija').value;
+
+        // Send a PUT request to update the status
+        const response = await fetch(`http://localhost:9000/narudzbina/${narudzbinaId}`, {
+        method: 'PUT',
+        headers: {
+        'Content-Type': 'application/json',
+    },
+        body: JSON.stringify({
+        status: selectedStatus,
+    }),
+    });
+
+        if (response.ok) {
+        console.log('Narudzbina status updated successfully');
+    } else {
+        console.error('Failed to update Narudzbina status');
+    }
+    } catch (error) {
+        console.error('Error updating Narudzbina status:', error);
+    }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            // Get the id from the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const narudzbinaId = urlParams.get('id');
+
+            // Fetch Narudzbina data from your server based on id
+            const response = await fetch(`http://localhost:9000/narudzbina/${narudzbinaId}`);
+            const narudzbina = await response.json();
+            console.log("Frontend stampanje")
+            console.log(narudzbina)
+
+            // Function to fetch Plovilo details based on id
+            const fetchPloviloDetails = async (ploviloId) => {
+                const response = await fetch(`http://localhost:9000/plovilo/${ploviloId}`);
+                const ploviloDetails = await response.json();
+
+                return ploviloDetails;
+            };
+
+            // Populate the form with data
+            document.getElementById('zakazanoVreme').innerText = narudzbina.zakazno_vreme;
+
+            const totalContent = await narudzbina.stavke.reduce(async (totalPromise, stavka) => {
+                const total = await totalPromise;
+                const ploviloDetails = await fetchPloviloDetails(stavka.plovilo_id);
+                return total + '[' + ploviloDetails.naziv + '] x' + stavka.komada;
+            }, Promise.resolve(''));
+            document.getElementById('sadrzajNarudzbine').innerText = totalContent;
+
+            const totalCena = await narudzbina.stavke.reduce(async (totalPromise, stavka) => {
+                const total = await totalPromise;
+                const ploviloDetails = await fetchPloviloDetails(stavka.plovilo_id);
+                return total + (ploviloDetails.cena * stavka.komada);
+            }, Promise.resolve(0));
+            document.getElementById('cijena').innerText = totalCena;
+
+            document.getElementById('adresa').innerText = narudzbina.adresa;
+
+        } catch (error) {
+            console.error('Error fetching Narudzbina details:', error);
+        }
+    });
+</script>
+
+</body>
+
+</html>

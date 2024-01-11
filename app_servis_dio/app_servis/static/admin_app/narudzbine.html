@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Narudzbine</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+<main class="container">
+    <div class="row">
+        <nav class="navbar navbar-expand bg-dark navbar-dark">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <a class="navbar-brand" href="#">
+                        <img src="logo.png.png" alt="Avatar Logo" style="width:150px;" class="rounded-pill">
+                    </a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="plovila.html">Ponuda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="narudzbine.html">Narudzbine</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <h1>Narudzbine</h1>
+    <table class="table table-hover" id="narudzbineTable">
+        <thead>
+        <tr>
+            <th>Zakazano vrijeme</th>
+            <th>Status</th>
+            <th>Cijena</th>
+            <th>Adresa</th>
+            <th>Sadrzaj narudzbine</th>
+            <th>Akcija</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Table content will be dynamically added here -->
+        </tbody>
+    </table>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            // Fetch Narudzbine data from your server
+            const response = await fetch('http://localhost:9000/narudzbina/');
+            const narudzbine = await response.json();
+            console.log("Frontend stampanje")
+            console.log(narudzbine)
+
+            // Get the table body
+            const tableBody = document.getElementById('narudzbineTable').getElementsByTagName('tbody')[0];
+
+            // Function to fetch Plovilo details based on id
+            const fetchPloviloDetails = async (ploviloId) => {
+                const response = await fetch(`http://localhost:9000/plovilo/${ploviloId}`);
+                const ploviloDetails = await response.json();
+
+                return ploviloDetails;
+            };
+
+            // Populate the table with data
+            for (const narudzbina of narudzbine) {
+                const totalCena = await narudzbina.stavke.reduce(async (totalPromise, stavka) => {
+                    const total = await totalPromise;
+                    const ploviloDetails = await fetchPloviloDetails(stavka.plovilo_id);
+                    return total + (ploviloDetails.cena * stavka.komada);
+                }, Promise.resolve(0));
+
+                const totalContent = await narudzbina.stavke.reduce(async (totalPromise, stavka) => {
+                    const total = await totalPromise;
+                    const ploviloDetails = await fetchPloviloDetails(stavka.plovilo_id);
+                    return total + '[' + ploviloDetails.naziv + '] x' + stavka.komada;
+                }, Promise.resolve(''));
+
+                // Insert a new row with the calculated values
+                const row = tableBody.insertRow();
+                console.log(narudzbina.zakazanoVrijeme)
+                row.innerHTML = `
+                        <td>${narudzbina.zakazno_vreme}</td>
+                        <td>${narudzbina.status}</td>
+                        <td>${totalCena}</td>
+                        <td>${narudzbina.adresa}</td>
+                        <td>${totalContent}</td>
+                        <td>
+                            <a href="narudzbina.html?id=${narudzbina.id}" class="btn btn-primary">Izmeni</a>
+                        </td>
+                    `;
+            }
+        } catch (error) {
+            console.error('Error fetching Narudzbine:', error);
+        }
+    });
+</script>
+
+</body>
+
+</html>

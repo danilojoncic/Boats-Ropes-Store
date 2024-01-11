@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Plovila</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+<main class="container">
+    <div class="row">
+        <nav class="navbar navbar-expand bg-dark navbar-dark">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <a class="navbar-brand" href="index.html">
+                        <img src="logo.png.png" alt="Avatar Logo" style="width:150px;" class="rounded-pill">
+                    </a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="plovila.html">Ponuda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="narudzbine.html">Narudzbine</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <h1>Ponuda svih plovila</h1>
+    <a href="novo-plovilo.html" class="btn btn-primary float-end">Novo plovilo u ponudi</a>
+    <a href="kategorije.html" class="btn btn-primary float-end" style="margin-right: 10px;">Pregled svih
+        kategorija</a>
+    <a href="sveOpreme.html" class="btn btn-primary float-end" style="margin-right: 10px;">Pregled svu opremu</a>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Kategorija</th>
+            <th>Naziv</th>
+            <th>Opis</th>
+            <th>Cijena</th>
+            <th>Akcija</th>
+        </tr>
+        </thead>
+        <tbody id="spisak">
+        <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</main>
+<script>
+    function dataFetch() {
+        fetch("http://localhost:9000/plovilo/")
+            .then(response => response.json())
+            .then(data => {
+                for (let i = 0; i < data.length; i++) {
+                    let tr = document.createElement("tr");
+
+                    let tdKategorija = document.createElement("td");
+                    tdKategorija.innerHTML = data[i].kategorija.naziv; // Assuming kategorija_id is the correct property
+                    tr.appendChild(tdKategorija);
+
+                    let tdNaziv = document.createElement("td");
+                    tdNaziv.innerHTML = data[i].naziv;
+                    tr.appendChild(tdNaziv);
+
+                    let tdOpis = document.createElement("td");
+                    tdOpis.innerHTML = data[i].opis;
+                    tr.appendChild(tdOpis);
+
+                    let tdCijena = document.createElement("td");
+                    tdCijena.innerHTML = data[i].cena;
+                    tr.appendChild(tdCijena);
+
+                    let tdActions = document.createElement("td");
+
+                    let changeDugme = document.createElement("button");
+                    changeDugme.className = "btn btn-primary";
+                    changeDugme.style = "margin-right: 5px;"
+                    changeDugme.innerHTML = "Promena cene";
+                    changeDugme.addEventListener("click", function () {
+                        console.log("Kliknuto prvo dugme");
+
+                        const newPrice = prompt("Unesite novu cenu:");
+
+                        if (newPrice !== null) {
+                            const parsedPrice = parseInt(newPrice);
+
+                            if (!isNaN(parsedPrice)) {
+                                const id = data[i].id;
+                                const url = `http://localhost:9000/plovilo/:id`;
+
+                                fetch(url, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ cena: parsedPrice }),
+                                })
+                                    .then(response => response.json())
+                                    .then(updatedData => {
+                                        console.log("Updated data:", updatedData);
+                                        tdCijena.innerHTML = updatedData.cena;
+                                    })
+                                    .catch(error => {
+                                        console.error('Error updating price:', error);
+                                    });
+                            } else {
+                                alert("Molimo vas unesite validan broj.");
+                            }
+                        }
+                    });
+
+                    let editLink = document.createElement("a");
+                    editLink.className = "btn btn-primary";
+                    editLink.style = "margin-right: 5px;"
+                    editLink.href = "plovilo.html?id=" + data[i].id;
+                    editLink.innerHTML = "Izmeni";
+
+                    tdActions.appendChild(changeDugme);
+                    tdActions.appendChild(editLink);
+                    tr.appendChild(tdActions);
+
+                    document.getElementById("spisak").appendChild(tr);
+                }
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    window.addEventListener("load", dataFetch);
+</script>
+</body>
+
+</html>
